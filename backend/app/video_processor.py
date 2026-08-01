@@ -5,13 +5,19 @@ then writes the annotated video back out to disk.
 """
 from typing import List
 import cv2
-import mediapipe as mp
+
+try:
+    import mediapipe as mp
+    mp_pose = mp.solutions.pose
+    mp_drawing = mp.solutions.drawing_utils
+    mp_styles = mp.solutions.drawing_styles
+except (AttributeError, ModuleNotFoundError):
+    mp = None
+    mp_pose = None
+    mp_drawing = None
+    mp_styles = None
 
 from app.pose_analysis import FrameLandmarks, AnalysisResult
-
-mp_pose = mp.solutions.pose
-mp_drawing = mp.solutions.drawing_utils
-mp_styles = mp.solutions.drawing_styles
 
 
 def _landmarks_to_mp_format(frame_lm: FrameLandmarks):
@@ -68,7 +74,7 @@ def annotate_video(video_path: str, output_path: str,
         if not ok:
             break
 
-        if idx < len(frames_lm):
+        if idx < len(frames_lm) and mp_drawing is not None and mp_pose is not None and mp_styles is not None:
             mp_landmarks = _landmarks_to_mp_format(frames_lm[idx])
             if mp_landmarks is not None:
                 mp_drawing.draw_landmarks(

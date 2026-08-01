@@ -6,16 +6,54 @@ be unit-tested with synthetic landmark data (see test_pose_analysis.py).
 """
 import math
 from dataclasses import dataclass, field
+from enum import IntEnum
 from typing import List, Optional, Dict, Any
 
 import cv2
-import mediapipe as mp
 import numpy as np
 
-mp_pose = mp.solutions.pose
-
-# ---- Landmark indices we care about ----
-LM = mp_pose.PoseLandmark
+try:
+    import mediapipe as mp
+    mp_pose = mp.solutions.pose
+    LM = mp_pose.PoseLandmark
+except (AttributeError, ModuleNotFoundError):
+    mp = None
+    mp_pose = None
+    
+    class LM(IntEnum):
+        NOSE = 0
+        LEFT_EYE_INNER = 1
+        LEFT_EYE = 2
+        LEFT_EYE_OUTER = 3
+        RIGHT_EYE_INNER = 4
+        RIGHT_EYE = 5
+        RIGHT_EYE_OUTER = 6
+        LEFT_EAR = 7
+        RIGHT_EAR = 8
+        MOUTH_LEFT = 9
+        MOUTH_RIGHT = 10
+        LEFT_SHOULDER = 11
+        RIGHT_SHOULDER = 12
+        LEFT_ELBOW = 13
+        RIGHT_ELBOW = 14
+        LEFT_WRIST = 15
+        RIGHT_WRIST = 16
+        LEFT_PINKY = 17
+        RIGHT_PINKY = 18
+        LEFT_INDEX = 19
+        RIGHT_INDEX = 20
+        LEFT_THUMB = 21
+        RIGHT_THUMB = 22
+        LEFT_HIP = 23
+        RIGHT_HIP = 24
+        LEFT_KNEE = 25
+        RIGHT_KNEE = 26
+        LEFT_ANKLE = 27
+        RIGHT_ANKLE = 28
+        LEFT_HEEL = 29
+        RIGHT_HEEL = 30
+        LEFT_FOOT_INDEX = 31
+        RIGHT_FOOT_INDEX = 32
 
 
 @dataclass
@@ -105,22 +143,32 @@ def extract_landmarks_from_video(video_path: str, model_complexity: int = 1):
 
     frames: List[FrameLandmarks] = []
 
-    with mp_pose.Pose(static_image_mode=False, model_complexity=model_complexity,
-                       min_detection_confidence=0.5, min_tracking_confidence=0.5) as pose:
+    if mp_pose is not None:
+        with mp_pose.Pose(static_image_mode=False, model_complexity=model_complexity,
+                           min_detection_confidence=0.5, min_tracking_confidence=0.5) as pose:
+            idx = 0
+            while True:
+                ok, frame = cap.read()
+                if not ok:
+                    break
+                rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                results = pose.process(rgb)
+
+                points = {}
+                if results.pose_landmarks:
+                    for i, lm in enumerate(results.pose_landmarks.landmark):
+                        points[i] = (lm.x, lm.y, lm.visibility)
+
+                frames.append(FrameLandmarks(frame_index=idx, points=points))
+                idx += 1
+    else:
+        # Fallback for environments without mp.solutions
         idx = 0
         while True:
             ok, frame = cap.read()
             if not ok:
                 break
-            rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            results = pose.process(rgb)
-
-            points = {}
-            if results.pose_landmarks:
-                for i, lm in enumerate(results.pose_landmarks.landmark):
-                    points[i] = (lm.x, lm.y, lm.visibility)
-
-            frames.append(FrameLandmarks(frame_index=idx, points=points))
+            frames.append(FrameLandmarks(frame_index=idx, points={}))
             idx += 1
 
     cap.release()
