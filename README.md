@@ -96,52 +96,6 @@ fitness-form-checker/
 
 ---
 
-## ⚙️ Local Development Setup
-
-### Prerequisites
-
-- **Python**: 3.10 or higher
-- **Node.js**: 18.0 or higher
-- **npm** or **yarn**
-
-### 1. Backend Setup
-
-```bash
-# Navigate to backend directory
-cd backend
-
-# Create virtual environment
-python3 -m venv venv
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run backend unit tests
-python test_pose_analysis.py
-
-# Start FastAPI development server
-uvicorn main:app --reload --port 8000
-```
-
-### 2. Frontend Setup
-
-```bash
-# Navigate to frontend directory
-cd frontend
-
-# Install Node dependencies
-npm install
-
-# Configure environment variables
-cp .env.example .env
-
-# Start Vite development server
-npm run dev
-```
-
----
-
 ## 📄 License
 
 This project is open-source and available under the [MIT License](LICENSE).
