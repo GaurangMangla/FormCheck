@@ -1,0 +1,30 @@
+services:
+  # FastAPI Backend Web Service (Docker container with OpenCV & MediaPipe)
+  - type: web
+    name: fitness-form-checker-backend
+    env: docker
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 8000
+
+  # React Frontend Static Site
+  - type: web
+    name: fitness-form-checker-frontend
+    env: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: ./frontend/dist
+    plan: free
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: fitness-form-checker-backend
+          property: host
